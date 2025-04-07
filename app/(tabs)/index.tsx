@@ -1,74 +1,111 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Link } from 'expo-router';
+import { useCapybaraStats } from '@/hooks/useCapybaraStats';
+import { AnimatedCapybara } from '@/components/AnimatedCapybara';
 
 export default function HomeScreen() {
+  const {
+    hunger,
+    happiness,
+    energy,
+    cleanliness,
+    isSleeping,
+    visualState,
+    age,
+    
+    feed,
+    play,
+    sleep,
+    clean,
+  } = useCapybaraStats();
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>MyCapybara</Text>
+        <Link href="/games" asChild>
+          <TouchableOpacity style={styles.gamesButton}>
+            <Text>Jogos</Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
+      <AnimatedCapybara state={visualState} size={220} />
+
+      <View style={styles.stats}>
+        <Text>🍗 Fome: {hunger}/100 {hunger < 30 && '(Faminto!)'}</Text>
+        <Text>😊 Felicidade: {happiness}/100 {happiness < 30 && '(Triste)'}</Text>
+        <Text>💤 Energia: {energy}/100 {energy < 30 && '(Cansado)'}</Text>
+        <Text> Limpeza: {cleanliness}/100</Text>
+      </View>
+
+      <View style={styles.actions}>
+        <TouchableOpacity style={styles.button} onPress={feed}>
+          <Text>🍎 Alimentar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={play}>
+          <Text>🎾 Brincar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, isSleeping && styles.sleepingButton]} 
+          onPress={sleep}
+        >
+          <Text>{isSleeping ? '⏰ Acordar' : '🌙 Dormir'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={clean}>
+          <Text>🧼 Limpar</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#e8f5e9',
+  },
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  gamesButton: {
+    backgroundColor: '#81c784',
+    padding: 10,
+    borderRadius: 5,
+  },
+  capybara: {
+    width: 200,
+    height: 200,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  stats: {
+    marginBottom: 20,
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  button: {
+    backgroundColor: '#a3d9a5',
+    padding: 15,
+    borderRadius: 10,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  sleepingButton: {
+    backgroundColor: '#ffcc80',
   },
 });
