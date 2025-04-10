@@ -5,10 +5,10 @@ type CapybaraState = 'happy' | 'hungry' | 'sleepy' | 'sleeping' | 'sad' | 'eatin
 
 export function useCapybaraStats() {
   // Estados básicos
-  const [hunger, setHunger] = useState(20);
-  const [happiness, setHappiness] = useState(20);
-  const [energy, setEnergy] = useState(20);
-  const [cleanliness, setCleanliness] = useState(20);
+  const [hunger, setHunger] = useState(50);
+  const [happiness, setHappiness] = useState(50);
+  const [energy, setEnergy] = useState(50);
+  const [cleanliness, setCleanliness] = useState(50);
   const [isSleeping, setIsSleeping] = useState(false);
   const [visualState, setVisualState] = useState<CapybaraState>('happy');
   const [age, setAge] = useState(0); // em dias
@@ -53,7 +53,7 @@ export function useCapybaraStats() {
     if (!isSleeping) {
       setHunger(prev => Math.min(100, prev + 20));
       setCleanliness(prev => Math.max(0, prev - 5));
-      //setVisualState('eating');
+      setVisualState('eating');
       
       // Volta para estado normal após comer
       setTimeout(() => {

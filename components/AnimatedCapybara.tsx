@@ -19,12 +19,14 @@ export const AnimatedCapybara: React.FC<AnimatedCapybaraProps> = ({
   // components/AnimatedCapybara.tsx
 
     const gifMap: Record<CapybaraState, ImageSourcePropType> = {
-    happy: require('@/assets/capybara/happy.gif'),    // Estado normal/feliz
-    hungry: require('@/assets/capybara/hungry.gif'),  // Quando precisa comer
-    sleepy: require('@/assets/capybara/sleepy.gif'),  // Quando está com sono
-    sleeping: require('@/assets/capybara/sleeping.gif'), // Dormindo
-    sad: require('@/assets/capybara/sad.gif'),        // Quando a felicidade está baixa
+    happy: require('@/assets/capybara/happy.gif'),
+    hungry: require('@/assets/capybara/hungry.gif'),
+    sleepy: require('@/assets/capybara/sleepy.gif'),
+    sleeping: require('@/assets/capybara/sleeping.gif'), 
+    sad: require('@/assets/capybara/sad.gif'),
+    eating: require('@/assets/capybara/eating.gif'),
     };
+    
 
   // Animação de flutuação (para estado normal)
   useEffect(() => {
