@@ -1,17 +1,17 @@
 // hooks/useCapybaraStats.ts
 import { useState, useEffect } from 'react';
+import { Alert } from 'react-native';
 
 type CapybaraState = 'happy' | 'hungry' | 'sleepy' | 'sleeping' | 'sad' | 'eating';
 
-export function useCapybaraStats() {
-  // Estados básicos
-  const [hunger, setHunger] = useState(50);
-  const [happiness, setHappiness] = useState(50);
-  const [energy, setEnergy] = useState(50);
-  const [cleanliness, setCleanliness] = useState(50);
+export const useCapybaraStats = () => {
+  const [hunger, setHunger] = useState(80);
+  const [happiness, setHappiness] = useState(80);
+  const [energy, setEnergy] = useState(80);
+  const [cleanliness, setCleanliness] = useState(80);
   const [isSleeping, setIsSleeping] = useState(false);
   const [visualState, setVisualState] = useState<CapybaraState>('happy');
-  const [age, setAge] = useState(0); // em dias
+  const [age, setAge] = useState(0);
 
   // Atualiza o estado visual baseado nos stats
   useEffect(() => {
@@ -23,7 +23,7 @@ export function useCapybaraStats() {
       setVisualState('sleepy');
     } else if (happiness < 30) {
       setVisualState('sad');
-    } else if (visualState !== 'eating') {
+    } else {
       setVisualState('happy');
     }
   }, [hunger, happiness, energy, isSleeping]);
@@ -34,14 +34,9 @@ export function useCapybaraStats() {
       if (!isSleeping) {
         setHunger(prev => Math.max(0, prev - 1));
         setHappiness(prev => Math.max(0, prev - 0.5));
-        setCleanliness(prev => Math.max(0, prev - 0.3));
+        setCleanliness(prev => Math.max(0, prev - 0.5));
       }
-      
-      setEnergy(prev => {
-        const newValue = prev + (isSleeping ? 2 : -1.0);
-        return Math.min(100, Math.max(0, newValue));
-      });
-      
+      setEnergy(prev => Math.min(100, Math.max(0, prev + (isSleeping ? 2 : -0.7))));
       setAge(prev => prev + 0.01);
     }, 3000);
 
@@ -54,11 +49,7 @@ export function useCapybaraStats() {
       setHunger(prev => Math.min(100, prev + 20));
       setCleanliness(prev => Math.max(0, prev - 5));
       setVisualState('eating');
-      
-      // Volta para estado normal após comer
-      setTimeout(() => {
-        setVisualState(happiness >= 30 ? 'happy' : 'sad');
-      }, 1500);
+      setTimeout(() => setVisualState('happy'), 1000);
     }
   };
 
@@ -72,7 +63,6 @@ export function useCapybaraStats() {
 
   const sleep = () => {
     setIsSleeping(!isSleeping);
-    setVisualState(isSleeping ? 'happy' : 'sleeping');
   };
 
   const clean = () => {
@@ -82,13 +72,8 @@ export function useCapybaraStats() {
     }
   };
 
-  // Callback quando um jogo é completado
-  const gameCompleted = (happinessGain: number) => {
-    setHappiness(prev => Math.min(100, prev + happinessGain));
-    setEnergy(prev => Math.max(0, prev - 10));
-  };
-
   return {
+    // Estados
     hunger,
     happiness,
     energy,
@@ -97,12 +82,13 @@ export function useCapybaraStats() {
     visualState,
     age,
     
+    // Ações
     feed,
     play,
     sleep,
     clean,
-    gameCompleted,
     
+    // Setters (se necessário)
     setVisualState,
   };
-}
+};
