@@ -30,7 +30,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </Link>
       </View>
-      <AnimatedCapybara state={visualState} size={220} />
+      <AnimatedCapybara state={visualState} size={220} cleanliness={cleanliness} />
 
       <View style={styles.stats}>
         <Text>🍗 Fome: {hunger}/100 {hunger < 30 && '(Faminto!)'}</Text>
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#fff0f5',
   },
   header: {
     flexDirection: 'row',

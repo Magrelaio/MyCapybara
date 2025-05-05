@@ -25,8 +25,6 @@ const Capybara = ({ isSleeping, hunger, happiness }: CapybaraProps) => {
 
 const styles = StyleSheet.create({
   image: {
-    width: 200,
-    height: 200,
     alignSelf: 'center',
     marginVertical: 20,
   },

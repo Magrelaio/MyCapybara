@@ -55,9 +55,14 @@ export function useCapybaraStats() {
       setCleanliness(prev => Math.max(0, prev - 5));
       setVisualState('eating');
       
-      // Volta para estado normal após comer
+      // Volta para estado anterior ou 'happy' após comer
       setTimeout(() => {
-        setVisualState(happiness >= 30 ? 'happy' : 'sad');
+        setVisualState((prevState) => {
+          if (happiness >= 30) {
+            return prevState === 'eating' ? 'happy' : prevState;
+          }
+          return 'sad';
+        });
       }, 1500);
     }
   };
@@ -82,7 +87,6 @@ export function useCapybaraStats() {
     }
   };
 
-  // Callback quando um jogo é completado
   const gameCompleted = (happinessGain: number) => {
     setHappiness(prev => Math.min(100, prev + happinessGain));
     setEnergy(prev => Math.max(0, prev - 10));

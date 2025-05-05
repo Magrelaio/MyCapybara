@@ -18,3 +18,5 @@ export const CapybaraStats = create((set, get) => ({
     });
   },
 }));
+
+export default CapybaraStats;
