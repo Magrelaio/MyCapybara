@@ -17,7 +17,7 @@ export const AnimatedCapybara: React.FC<AnimatedCapybaraProps> = ({
 }) => {
   const spinValue = new Animated.Value(0);
   
-  // Sprites principais (verifique os caminhos!)
+  // Sprites principais
   const gifMap = {
     happy: require('@/assets/capybara/happy.gif'),
     hungry: require('@/assets/capybara/hungry.gif'),
@@ -27,37 +27,20 @@ export const AnimatedCapybara: React.FC<AnimatedCapybaraProps> = ({
     eating: require('@/assets/capybara/eating.gif'),
   };
 
-  // GIF de sujeira (caminho relativo garantido)
+  // GIF de sujeira
   const dirtOverlay = require('@/assets/capybara/dirt_overlay.gif');
 
-  // Animação de flutuação
-  useEffect(() => {
-    if (state === 'happy') {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(spinValue, {
-            toValue: 1,
-            duration: 1500,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          }),
-          Animated.timing(spinValue, {
-            toValue: 0,
-            duration: 1500,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    } else {
-      spinValue.setValue(0);
-    }
-  }, [state]);
+  // Overlays de chapéu
+  const chapeumorandoOverlay = require('@/assets/capybara/chapeumorando.gif');
+  const chapeumorandoSadOverlay = require('@/assets/capybara/chapeumorando_sad.gif');
 
   const translateY = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -10],
   });
+
+  // Determina qual chapéu mostrar
+  const showSadHat = state === 'hungry' || state === 'sleepy' || state === 'sleeping';
 
   return (
     <View style={styles.centeredContainer}>
@@ -75,6 +58,22 @@ export const AnimatedCapybara: React.FC<AnimatedCapybaraProps> = ({
           ]}
           resizeMode="contain"
         />
+
+        {/* Overlay do chapeumorando - muda conforme o estado */}
+        <Animated.Image
+          source={showSadHat ? chapeumorandoSadOverlay : chapeumorandoOverlay}
+          style={[
+            styles.sprite,
+            styles.chapeumorandoOverlay,
+            { 
+              width: '100%', 
+              height: '100%',
+              transform: [{ translateY }],
+              opacity: 1,
+            }
+          ]}
+          resizeMode="contain"
+        />
         
         {/* Overlay de sujeira - aparece quando cleanliness < 50 */}
         {cleanliness < 50 && (
@@ -87,7 +86,7 @@ export const AnimatedCapybara: React.FC<AnimatedCapybaraProps> = ({
                 width: '100%', 
                 height: '100%',
                 transform: [{ translateY }],
-                opacity: 1 - (cleanliness / 50) // Opacidade baseada na limpeza
+                opacity: 1 - (cleanliness / 50)
               }
             ]}
             resizeMode="contain"
@@ -115,5 +114,8 @@ const styles = StyleSheet.create({
   },
   dirtOverlay: {
     zIndex: 1,
+  },
+  chapeumorandoOverlay: {
+    zIndex: 2,
   },
 });

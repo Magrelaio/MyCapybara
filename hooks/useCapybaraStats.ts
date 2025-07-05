@@ -1,8 +1,11 @@
 // hooks/useCapybaraStats.ts
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type CapybaraState = 'happy' | 'hungry' | 'sleepy' | 'sleeping' | 'sad' | 'eating';
+
+const STORAGE_KEY = 'capybara_stats';
 
 export const useCapybaraStats = () => {
   const [hunger, setHunger] = useState(80);
@@ -28,7 +31,6 @@ export const useCapybaraStats = () => {
     }
   }, [hunger, happiness, energy, isSleeping]);
 
-  // Diminui os stats com o tempo
   useEffect(() => {
     const timer = setInterval(() => {
       if (!isSleeping) {
@@ -42,6 +44,50 @@ export const useCapybaraStats = () => {
 
     return () => clearInterval(timer);
   }, [isSleeping]);
+
+  // Carrega os dados salvos ao iniciar
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await AsyncStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (typeof data.hunger === 'number') setHunger(data.hunger);
+          if (typeof data.happiness === 'number') setHappiness(data.happiness);
+          if (typeof data.energy === 'number') setEnergy(data.energy);
+          if (typeof data.cleanliness === 'number') setCleanliness(data.cleanliness);
+          if (typeof data.isSleeping === 'boolean') setIsSleeping(data.isSleeping);
+          if (typeof data.visualState === 'string') setVisualState(data.visualState);
+          if (typeof data.age === 'number') setAge(data.age);
+        }
+      } catch (e) {
+        Alert.alert('Erro ao carregar os dados', 'Não foi possível carregar os dados salvos.');
+      }
+    })();
+  }, []);
+
+  // Salva os dados sempre que algum status mudar
+  useEffect(() => {
+    const save = async () => {
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            hunger,
+            happiness,
+            energy,
+            cleanliness,
+            isSleeping,
+            visualState,
+            age,
+          })
+        );
+      } catch (e) {
+        // ignore
+      }
+    };
+    save();
+   }, [hunger, happiness, energy, cleanliness, isSleeping, visualState, age]);
 
   // Ações do jogador
   const feed = () => {
