@@ -26,6 +26,16 @@ export default function GamesScreen() {
           </Link>
         )}
       />
+      <Link href="/shop" asChild>
+        <TouchableOpacity style={styles.card}>
+          <ThemedText style={styles.cardTitle}>Loja</ThemedText>
+        </TouchableOpacity>
+      </Link>
+      <Link href="/room" asChild>
+        <TouchableOpacity style={styles.card}>
+          <ThemedText style={styles.cardTitle}>Quarto</ThemedText>
+        </TouchableOpacity>
+      </Link>
     </ThemedView>
   );
 }

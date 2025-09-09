@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import { useCapybaraStats } from '@/hooks/useCapybaraStats';
 import { AnimatedCapybara } from '@/components/AnimatedCapybara';
+import { CapybaraStats } from '././src/store/CapybaraStats.js';
 
 export default function HomeScreen() {
   const {
@@ -37,6 +38,8 @@ export default function HomeScreen() {
         <Text>😊 Felicidade: {happiness}/100 {happiness < 30 && '(Triste)'}</Text>
         <Text>💤 Energia: {energy}/100 {energy < 30 && '(Cansado)'}</Text>
         <Text> Limpeza: {cleanliness}/100</Text>
+        <Text> Idade: {age} dias</Text>
+        <Text> Moedas: {CapybaraStats((s) => s.coins)}</Text>
       </View>
 
       <View style={styles.actions}>

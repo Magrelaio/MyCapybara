@@ -1,189 +1,283 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, Alert, Animated } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const GRID_SIZE = 8;
-const CANDY_COLORS = ['red', 'blue', 'green', 'yellow', 'purple'];
+const CANDY_COLORS = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
 
-const App = () => {
-  const [board, setBoard] = useState([]);
-  const [selectedCandy, setSelectedCandy] = useState(null);
+type CandyColor = string;
+type BoardType = CandyColor[][];
+type MatchCell = { row: number; col: number };
+
+function generateBoard(): BoardType {
+  const board = [];
+  for (let i = 0; i < GRID_SIZE; i++) {
+    const row = [];
+    for (let j = 0; j < GRID_SIZE; j++) {
+      row.push(CANDY_COLORS[Math.floor(Math.random() * CANDY_COLORS.length)]);
+    }
+    board.push(row);
+  }
+  return board;
+}
+
+function cloneBoard(board: BoardType): BoardType {
+  return board.map(row => [...row]);
+}
+
+function findMatches(board: BoardType): MatchCell[] {
+  const matches = [];
+  // Horizontal
+  for (let i = 0; i < GRID_SIZE; i++) {
+    let streak = 1;
+    for (let j = 1; j < GRID_SIZE; j++) {
+      if (board[i][j] && board[i][j] === board[i][j - 1]) {
+        streak++;
+      } else {
+        if (streak >= 3) {
+          for (let k = 0; k < streak; k++) {
+            matches.push({ row: i, col: j - 1 - k });
+          }
+        }
+        streak = 1;
+      }
+    }
+    if (streak >= 3) {
+      for (let k = 0; k < streak; k++) {
+        matches.push({ row: i, col: GRID_SIZE - 1 - k });
+      }
+    }
+  }
+  // Vertical
+  for (let j = 0; j < GRID_SIZE; j++) {
+    let streak = 1;
+    for (let i = 1; i < GRID_SIZE; i++) {
+      if (board[i][j] && board[i][j] === board[i - 1][j]) {
+        streak++;
+      } else {
+        if (streak >= 3) {
+          for (let k = 0; k < streak; k++) {
+            matches.push({ row: i - 1 - k, col: j });
+          }
+        }
+        streak = 1;
+      }
+    }
+    if (streak >= 3) {
+      for (let k = 0; k < streak; k++) {
+        matches.push({ row: GRID_SIZE - 1 - k, col: j });
+      }
+    }
+  }
+  // Remove duplicados
+  return matches.filter(
+    (v, i, a) => a.findIndex(t => t.row === v.row && t.col === v.col) === i
+  );
+}
+
+function removeMatches(board: BoardType, matches: MatchCell[]): BoardType {
+  const newBoard = cloneBoard(board);
+  matches.forEach(({ row, col }) => {
+    newBoard[row][col] = null;
+  });
+  // Faz os doces caírem
+  for (let col = 0; col < GRID_SIZE; col++) {
+    let empty = [];
+    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+      if (newBoard[row][col] === null) {
+        empty.push(row);
+      } else if (empty.length > 0) {
+        const emptyRow = empty.shift();
+        newBoard[emptyRow][col] = newBoard[row][col];
+        newBoard[row][col] = null;
+        empty.push(row);
+      }
+    }
+    // Preenche topo
+    for (let k = 0; k < empty.length; k++) {
+      newBoard[empty[k]][col] = CANDY_COLORS[Math.floor(Math.random() * CANDY_COLORS.length)];
+    }
+  }
+  return newBoard;
+}
+
+function getMatchedMap(matches: MatchCell[]): boolean[][] {
+  const map: boolean[][] = Array(GRID_SIZE)
+    .fill(null)
+    .map(() => Array(GRID_SIZE).fill(false));
+  matches.forEach(({ row, col }) => {
+    map[row][col] = true;
+  });
+  return map;
+}
+
+export default function CandybaraGame() {
+  const [board, setBoard] = useState(generateBoard());
+  const [selected, setSelected] = useState<MatchCell | null>(null);
   const [score, setScore] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const [matchedCells, setMatchedCells] = useState<MatchCell[]>([]);
+  const opacityAnim = useRef(
+    Array(GRID_SIZE)
+      .fill(null)
+      .map(() => Array(GRID_SIZE).fill(null).map(() => new Animated.Value(1)))
+  ).current;
+  const dropAnim = useRef(
+    Array(GRID_SIZE)
+      .fill(null)
+      .map(() => Array(GRID_SIZE).fill(null).map(() => new Animated.Value(0)))
+  ).current;
 
-  // Inicializa o tabuleiro
+  // Detecta e anima matches
   useEffect(() => {
-    initializeBoard();
-  }, []);
+    const matches = findMatches(board);
+    if (matches.length > 0) {
+      setAnimating(true);
+      setMatchedCells(matches);
 
-  const initializeBoard = () => {
-    const newBoard = [];
-    for (let i = 0; i < GRID_SIZE; i++) {
-      const row = [];
-      for (let j = 0; j < GRID_SIZE; j++) {
-        row.push(CANDY_COLORS[Math.floor(Math.random() * CANDY_COLORS.length)]);
-      }
-      newBoard.push(row);
-    }
-    setBoard(newBoard);
-    setScore(0);
-  };
-
-  const handleCandyPress = (row, col) => {
-    if (selectedCandy) {
-      // Verifica se é um movimento válido (adjacente)
-      if (
-        (Math.abs(selectedCandy.row - row) === 1 && selectedCandy.col === col) ||
-        (Math.abs(selectedCandy.col - col) === 1 && selectedCandy.row === row)
-      ) {
-        // Faz a troca
-        const newBoard = [...board];
-        const temp = newBoard[row][col];
-        newBoard[row][col] = newBoard[selectedCandy.row][selectedCandy.col];
-        newBoard[selectedCandy.row][selectedCandy.col] = temp;
-        setBoard(newBoard);
-        
-        // Verifica combinações após a troca
-        setTimeout(() => {
-          const matches = findMatches(newBoard);
-          if (matches.length > 0) {
-            removeMatches(newBoard, matches);
-            setScore(score + matches.length * 10);
-          } else {
-            // Desfaz a troca se não houver combinações
-            const revertedBoard = [...newBoard];
-            revertedBoard[row][col] = newBoard[selectedCandy.row][selectedCandy.col];
-            revertedBoard[selectedCandy.row][selectedCandy.col] = temp;
-            setBoard(revertedBoard);
-            Alert.alert('Movimento inválido', 'Nenhuma combinação formada');
-          }
-        }, 300);
-      }
-      setSelectedCandy(null);
-    } else {
-      setSelectedCandy({ row, col });
-    }
-  };
-
-  const findMatches = (currentBoard) => {
-    const matches = [];
-
-    // Verifica linhas
-    for (let i = 0; i < GRID_SIZE; i++) {
-      for (let j = 0; j < GRID_SIZE - 2; j++) {
-        if (
-          currentBoard[i][j] === currentBoard[i][j + 1] &&
-          currentBoard[i][j] === currentBoard[i][j + 2]
-        ) {
-          // Verifica se já existe combinação maior
-          let k = j + 3;
-          while (k < GRID_SIZE && currentBoard[i][j] === currentBoard[i][k]) {
-            k++;
-          }
-          for (let l = j; l < k; l++) {
-            matches.push({ row: i, col: l });
-          }
-          j = k - 1;
-        }
-      }
-    }
-
-    // Verifica colunas
-    for (let j = 0; j < GRID_SIZE; j++) {
-      for (let i = 0; i < GRID_SIZE - 2; i++) {
-        if (
-          currentBoard[i][j] === currentBoard[i + 1][j] &&
-          currentBoard[i][j] === currentBoard[i + 2][j]
-        ) {
-          // Verifica se já existe combinação maior
-          let k = i + 3;
-          while (k < GRID_SIZE && currentBoard[i][j] === currentBoard[k][j]) {
-            k++;
-          }
-          for (let l = i; l < k; l++) {
-            matches.push({ row: l, col: j });
-          }
-          i = k - 1;
-        }
-      }
-    }
-
-    return matches;
-  };
-
-  const removeMatches = (currentBoard, matches) => {
-    const newBoard = [...currentBoard];
-    
-    // Remove os doces combinados
-    matches.forEach(({ row, col }) => {
-      newBoard[row][col] = null;
-    });
-
-    // Preenche os espaços vazios
-    for (let j = 0; j < GRID_SIZE; j++) {
-      let emptySpaces = [];
-      
-      // Encontra espaços vazios na coluna
-      for (let i = GRID_SIZE - 1; i >= 0; i--) {
-        if (newBoard[i][j] === null) {
-          emptySpaces.push(i);
-        } else if (emptySpaces.length > 0) {
-          const emptyRow = emptySpaces.shift();
-          newBoard[emptyRow][j] = newBoard[i][j];
-          newBoard[i][j] = null;
-          emptySpaces.push(i);
-        }
-      }
-      
-      // Preenche os espaços no topo com novos doces
-      emptySpaces.forEach(row => {
-        newBoard[row][j] = CANDY_COLORS[Math.floor(Math.random() * CANDY_COLORS.length)];
+      // Pisca os doces que vão sumir
+      matches.forEach(({ row, col }) => {
+        Animated.sequence([
+          Animated.timing(opacityAnim[row][col], {
+            toValue: 0.2,
+            duration: 120,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacityAnim[row][col], {
+            toValue: 1,
+            duration: 120,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacityAnim[row][col], {
+            toValue: 0.2,
+            duration: 120,
+            useNativeDriver: true,
+          }),
+        ]).start();
       });
+
+      // Aguarda animação de piscar antes de remover
+      setTimeout(() => {
+        // Remove doces e calcula queda
+        const newBoard = removeMatches(board, matches);
+
+        // Calcula deslocamento vertical para animação de queda
+        for (let col = 0; col < GRID_SIZE; col++) {
+          let dropCount = 0;
+          for (let row = GRID_SIZE - 1; row >= 0; row--) {
+            if (board[row][col] === null) {
+              dropCount++;
+            } else if (dropCount > 0) {
+              dropAnim[row][col].setValue(-dropCount * 44); // 40px + 2*margin
+              Animated.timing(dropAnim[row][col], {
+                toValue: 0,
+                duration: 250 + dropCount * 40,
+                useNativeDriver: true,
+              }).start();
+            }
+          }
+        }
+
+        setBoard(newBoard);
+        setScore(prev => prev + matches.length * 10);
+        setMatchedCells([]);
+        setTimeout(() => setAnimating(false), 350);
+      }, 400);
     }
+  }, [board]);
 
-    setBoard(newBoard);
-
-    // Verifica se há novas combinações após o preenchimento
-    setTimeout(() => {
-      const newMatches = findMatches(newBoard);
-      if (newMatches.length > 0) {
-        removeMatches(newBoard, newMatches);
-        setScore(score + newMatches.length * 10);
+  function handlePress(row: number, col: number) {
+    if (animating) return;
+    if (!selected) {
+      setSelected({ row, col });
+      return;
+    }
+    const { row: r, col: c } = selected;
+    // Só permite troca adjacente
+    if (
+      (Math.abs(r - row) === 1 && c === col) ||
+      (Math.abs(c - col) === 1 && r === row)
+    ) {
+      const newBoard = cloneBoard(board);
+      // Troca
+      [newBoard[r][c], newBoard[row][col]] = [newBoard[row][col], newBoard[r][c]];
+      // Só aceita se formar combinação
+      if (findMatches(newBoard).length > 0) {
+        setBoard(newBoard);
+      } else {
+        setAnimating(true);
+        setBoard(newBoard);
+        setTimeout(() => {
+          // Reverte se não formar combinação
+          const reverted = cloneBoard(board);
+          setBoard(reverted);
+          setAnimating(false);
+          Alert.alert('Movimento inválido', 'Nenhuma combinação formada');
+        }, 350);
       }
-    }, 500);
-  };
+    }
+    setSelected(null);
+  }
+
+  function handleRestart() {
+    setBoard(generateBoard());
+    setScore(0);
+    setSelected(null);
+    setMatchedCells([]);
+    // Reset animações
+    for (let i = 0; i < GRID_SIZE; i++) {
+      for (let j = 0; j < GRID_SIZE; j++) {
+        opacityAnim[i][j].setValue(1);
+        dropAnim[i][j].setValue(0);
+      }
+    }
+  }
+
+  const matchedMap = getMatchedMap(matchedCells);
 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.scoreContainer}>
         <Text style={styles.scoreText}>Pontuação: {score}</Text>
-        <TouchableOpacity style={styles.button} onPress={initializeBoard}>
+        <TouchableOpacity style={styles.button} onPress={handleRestart}>
           <Text style={styles.buttonText}>Reiniciar</Text>
         </TouchableOpacity>
       </View>
-      
       <View style={styles.board}>
-        {board.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.row}>
-            {row.map((candy, colIndex) => (
-              <TouchableOpacity
-                key={`${rowIndex}-${colIndex}`}
+        {board.map((row, rowIdx) => (
+          <View key={rowIdx} style={styles.row}>
+            {row.map((candy, colIdx) => (
+              <Animated.View
+                key={`${rowIdx}-${colIdx}`}
                 style={[
                   styles.candy,
                   {
-                    backgroundColor: candy,
-                    borderWidth: selectedCandy?.row === rowIndex && selectedCandy?.col === colIndex ? 3 : 0,
+                    backgroundColor: candy || 'transparent',
+                    borderWidth:
+                      selected?.row === rowIdx && selected?.col === colIdx ? 3 : 0,
                     borderColor: 'white',
+                    opacity: matchedMap[rowIdx][colIdx]
+                      ? opacityAnim[rowIdx][colIdx]
+                      : 1,
+                    transform: [
+                      { translateY: dropAnim[rowIdx][colIdx] }
+                    ],
                   },
                 ]}
-                onPress={() => handleCandyPress(rowIndex, colIndex)}
-              />
+              >
+                <TouchableOpacity
+                  style={{ flex: 1 }}
+                  onPress={() => handlePress(rowIdx, colIdx)}
+                  disabled={animating}
+                />
+              </Animated.View>
             ))}
           </View>
         ))}
       </View>
     </GestureHandlerRootView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -225,7 +319,6 @@ const styles = StyleSheet.create({
     height: 40,
     margin: 2,
     borderRadius: 5,
+    overflow: 'hidden',
   },
 });
-
-export default App;

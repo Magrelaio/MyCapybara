@@ -1,7 +1,8 @@
-// hooks/useCapybaraStats.ts
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CapybaraStats } from '../../MyCapybara/app/(tabs)/src/store/CapybaraStats.js';
+//import { OBJECTS } from './store/objects';
 
 type CapybaraState = 'happy' | 'hungry' | 'sleepy' | 'sleeping' | 'sad' | 'eating';
 
@@ -15,9 +16,10 @@ export const useCapybaraStats = () => {
   const [isSleeping, setIsSleeping] = useState(false);
   const [visualState, setVisualState] = useState<CapybaraState>('happy');
   const [age, setAge] = useState(0);
+  const [animationLock, setAnimationLock] = useState(false);
 
-  // Atualiza o estado visual baseado nos stats
   useEffect(() => {
+    if (animationLock) return;
     if (isSleeping) {
       setVisualState('sleeping');
     } else if (hunger < 30) {
@@ -29,7 +31,7 @@ export const useCapybaraStats = () => {
     } else {
       setVisualState('happy');
     }
-  }, [hunger, happiness, energy, isSleeping]);
+  }, [hunger, happiness, energy, isSleeping, animationLock]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -45,7 +47,6 @@ export const useCapybaraStats = () => {
     return () => clearInterval(timer);
   }, [isSleeping]);
 
-  // Carrega os dados salvos ao iniciar
   useEffect(() => {
     (async () => {
       try {
@@ -59,14 +60,22 @@ export const useCapybaraStats = () => {
           if (typeof data.isSleeping === 'boolean') setIsSleeping(data.isSleeping);
           if (typeof data.visualState === 'string') setVisualState(data.visualState);
           if (typeof data.age === 'number') setAge(data.age);
+              if (typeof data.coins === 'number') {
+          CapybaraStats.setState({ coins: data.coins });
         }
+        if (Array.isArray(data.inventory)) {
+          CapybaraStats.setState({ inventory: data.inventory });
+        }
+        if (Array.isArray(data.placedObjects)) {
+          CapybaraStats.setState({ placedObjects: data.placedObjects });
+        }
+      }
       } catch (e) {
         Alert.alert('Erro ao carregar os dados', 'Não foi possível carregar os dados salvos.');
       }
     })();
   }, []);
 
-  // Salva os dados sempre que algum status mudar
   useEffect(() => {
     const save = async () => {
       try {
@@ -80,22 +89,27 @@ export const useCapybaraStats = () => {
             isSleeping,
             visualState,
             age,
+            coins: CapybaraStats.getState().coins,
+            inventory: CapybaraStats.getState().inventory,
+            placedObjects: CapybaraStats.getState().placedObjects, 
           })
         );
       } catch (e) {
-        // ignore
       }
     };
     save();
-   }, [hunger, happiness, energy, cleanliness, isSleeping, visualState, age]);
+   }, [hunger, happiness, energy, cleanliness, isSleeping, visualState, age, CapybaraStats.getState().coins, CapybaraStats.getState().inventory, CapybaraStats.getState().placedObjects]);
 
-  // Ações do jogador
   const feed = () => {
     if (!isSleeping) {
       setHunger(prev => Math.min(100, prev + 20));
       setCleanliness(prev => Math.max(0, prev - 5));
       setVisualState('eating');
-      setTimeout(() => setVisualState('happy'), 1000);
+      setAnimationLock(true);
+      setTimeout(() => {
+        setAnimationLock(false);
+        setVisualState('happy');
+      }, 1000);
     }
   };
 
@@ -119,7 +133,6 @@ export const useCapybaraStats = () => {
   };
 
   return {
-    // Estados
     hunger,
     happiness,
     energy,
@@ -128,13 +141,11 @@ export const useCapybaraStats = () => {
     visualState,
     age,
     
-    // Ações
     feed,
     play,
     sleep,
     clean,
     
-    // Setters (se necessário)
     setVisualState,
   };
 };
