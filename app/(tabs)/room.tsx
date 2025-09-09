@@ -13,6 +13,8 @@ export default function RoomScreen() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const resizingId = useRef(null);
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const [editMode, setEditMode] = useState(false);
+  const [showInventory, setShowInventory] = useState(true);
 
   function handlePlace(obj) {
     const type = obj.type;
@@ -80,12 +82,20 @@ export default function RoomScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Quarto da Capivara</Text>
+      <TouchableOpacity style={styles.button} onPress={() => setEditMode(e => !e)}>
+        <Text>{editMode ? 'Salvar' : 'Editar Quarto'}</Text>
+      </TouchableOpacity>
+      {editMode && (
+        <TouchableOpacity style={styles.button} onPress={() => setShowInventory(v => !v)}>
+          <Text>{showInventory ? 'Minimizar Inventário' : 'Mostrar Inventário'}</Text>
+        </TouchableOpacity>
+      )}
       <View style={styles.room}>
         <View style={styles.wall}>
           {placedObjects.filter(o => o.type === 'wall').map(o => {
             const obj = OBJECTS.find(obj => obj.id === o.id);
-            const panResponder = getPanResponder(o);
-            const resizeResponder = getResizeResponder(o);
+            const panResponder = editMode ? getPanResponder(o) : {};
+            const resizeResponder = editMode ? getResizeResponder(o) : {};
             return (
               <View
                 key={o.id}
@@ -105,10 +115,12 @@ export default function RoomScreen() {
                   style={{ width: '100%', height: '100%' }}
                   resizeMode="contain"
                 />
-                <View
-                  style={styles.resizeHandle}
-                  {...resizeResponder.panHandlers}
-                />
+                {editMode && (
+                  <View
+                    style={[styles.resizeHandle, { zIndex: 99 }]}
+                    {...resizeResponder.panHandlers}
+                  />
+                )}
               </View>
             );
           })}
@@ -122,19 +134,24 @@ export default function RoomScreen() {
           })}
         </View>
       </View>
-      <Text style={styles.subtitle}>Inventário</Text>
-      <FlatList
-        data={inventory}
-        keyExtractor={item => item.id}
-        horizontal
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.invCard} onPress={() => handlePlace(item)}>
-            <Image source={item.image} style={styles.invImage} />
-            <Text>{item.name}</Text>
-            <Text>{item.type === 'wall' ? 'Parede' : 'Chão'}</Text>
-          </TouchableOpacity>
-        )}
-      />
+      {editMode && showInventory && (
+        <>
+          <Text style={[styles.subtitle, { backgroundColor: '#e0f7fa' }]}>Inventário</Text>
+          <FlatList
+            data={inventory}
+            style={{ backgroundColor: '#e0f7fa', maxHeight: 120 }}
+            keyExtractor={item => item.id}
+            horizontal
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.invCard} onPress={() => handlePlace(item)}>
+                <Image source={item.image} style={styles.invImage} />
+                <Text>{item.name}</Text>
+                <Text>{item.type === 'wall' ? 'Parede' : 'Chão'}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -157,4 +174,11 @@ const styles = StyleSheet.create({
   subtitle: { fontWeight: 'bold', marginTop: 10 },
   invCard: { backgroundColor: '#fff', padding: 8, margin: 8, borderRadius: 8, alignItems: 'center' },
   invImage: { width: 32, height: 32, marginBottom: 4 },
+  button: {
+    backgroundColor: '#a3d9a5',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
 });
