@@ -1,50 +1,45 @@
-# Welcome to your Expo app 👋
+# MyCapybara
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+MyCapybara é um aplicativo mobile onde você cuida de uma capivara virtual, decora seu quarto, joga minigames e coleciona itens!
 
-## Get started
+## Funcionalidades
+- Capivara virtual com estados (feliz, triste, com fome, suja, etc)
+- Alimentar, brincar, limpar e colocar para dormir
+- Sistema de moedas e loja de objetos
+- Inventário e decoração do quarto (mover, redimensionar e posicionar pôsteres)
+- Minigames para ganhar felicidade e moedas
+- Salvamento automático do progresso
 
-1. Install dependencies
-
+## Instalação
+1. Clone o repositório:
+   ```bash
+   git clone <url-do-repo>
+   ```
+2. Instale as dependências:
    ```bash
    npm install
+   # ou
+   yarn
    ```
-
-2. Start the app
-
+3. Execute o projeto:
    ```bash
-    npx expo start
+   npx expo start
+   # ou
+   yarn expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Estrutura do Projeto
+- `app/(tabs)/` - Telas principais (Home, Quarto, Loja, Jogos)
+- `components/` - Componentes visuais (Capybara, AnimatedCapybara, etc)
+- `hooks/` - Hooks customizados (useCapybaraStats)
+- `store/` - Estado global (CapybaraStats, objetos)
+- `games/` - Minigames
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Como jogar
+- Cuide da capivara alimentando, brincando, limpando e colocando para dormir.
+- Ganhe moedas jogando minigames e compre itens na loja.
+- Decore o quarto e personalize a posição/tamanho dos pôsteres.
+- Salve seu progresso automaticamente.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Créditos
+- Artes base por Beatriz Elenhi
